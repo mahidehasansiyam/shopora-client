@@ -55,7 +55,7 @@ export default function Navbar() {
 
         {/* Desktop Login */}
         <Link
-          href="/login"
+          href="/auth/login"
           className="hidden md:inline-flex items-center justify-center rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
         >
           Login
@@ -87,7 +87,7 @@ export default function Navbar() {
             ))}
             <hr className="my-2 border-border" />
             <Link
-              href="/login"
+              href="/auth/login"
               onClick={() => setIsMobileOpen(false)}
               className="rounded-md bg-primary px-3 py-2 text-center text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
             >
