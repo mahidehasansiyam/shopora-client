@@ -3,16 +3,27 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
-function handleLogin(e: React.FormEvent<HTMLFormElement>) {
+async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
   e.preventDefault();
-  const formData = new FormData(e.currentTarget);
-  const data = {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
-    rememberMe: formData.get("remember") === "on",
-  };
-  console.log("Login data:", data);
+  try {
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+      rememberMe: formData.get("remember") === "on",
+    };
+    const { data: result, error } = await authClient.signIn.email({
+      email: data.email,
+      password: data.password,
+      callbackURL: "/",
+    });
+    if (result) console.log("login success", result);
+    if (error) console.log("login error", error);
+  } catch (err) {
+    console.error("Login failed", err);
+  }
 }
 
 export default function LoginPage() {
@@ -30,7 +41,7 @@ export default function LoginPage() {
 
         <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
           <form
-            onSubmit={handleLogin}
+            onSubmit={(e) => handleLogin(e)}
             className="space-y-4"
           >
             <div>

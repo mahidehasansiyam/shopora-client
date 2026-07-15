@@ -3,17 +3,29 @@
 import { useState } from "react";
 import Link from "next/link";
 import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
-function handleRegister(e: React.FormEvent<HTMLFormElement>) {
+async function handleRegister(e: React.FormEvent<HTMLFormElement>) {
   e.preventDefault();
-  const formData = new FormData(e.currentTarget);
-  const data = {
-    name: formData.get("name") as string,
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
-    agreedToTerms: formData.get("terms") === "on",
-  };
-  console.log("Register data:", data);
+  try {
+    const formData = new FormData(e.currentTarget);
+    const datas = {
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+      agreedToTerms: formData.get("terms") === "on",
+    };
+    const { data, error } = await authClient.signUp.email({
+      name: datas.name,
+      email: datas.email,
+      password: datas.password,
+      callbackURL: "/",
+    });
+    if (data) console.log("data", data);
+    if (error) console.log("error :", error);
+  } catch (error) {
+    console.error("Registration failed", error);
+  }
 }
 
 export default function RegisterPage() {
@@ -33,7 +45,7 @@ export default function RegisterPage() {
 
         <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
           <form
-            onSubmit={handleRegister}
+            onSubmit={(e) => handleRegister(e)}
             className="space-y-4"
           >
             <div>
