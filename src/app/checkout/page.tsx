@@ -19,6 +19,7 @@ export default function CheckoutPage() {
     router.push("/auth/login");
     return null;
   }
+  const tkn = session.session.token;
 
   if (isLoading) {
     return (
@@ -59,7 +60,7 @@ export default function CheckoutPage() {
         phone: formData.get("phone") as string,
       };
 
-      const res = await createOrder(session.session.token, shippingAddress);
+      const res = await createOrder(tkn, shippingAddress);
       await clearCart();
       toast.success("Order placed successfully!");
       router.push(`/orders/${res.data._id}`);

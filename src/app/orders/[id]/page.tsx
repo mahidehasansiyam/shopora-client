@@ -44,9 +44,10 @@ export default function OrderPage() {
       router.push("/auth/login");
       return;
     }
+    const tkn = session.session.token;
     async function load() {
       try {
-        const res = await fetchOrder(session.session.token, params.id as string);
+        const res = await fetchOrder(tkn, params.id as string);
         setOrder(res.data);
       } catch {
         setError("Order not found");
