@@ -34,9 +34,10 @@ export default function AdminLayout({
   const { data: session, isPending } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  console.log(session);
 
   useEffect(() => {
-    if (!isPending && (!session?.user || session.user.role !== "admin")) {
+    if (!isPending && (!session?.user || (session.user as { role?: string }).role !== "admin")) {
       router.replace("/");
     }
   }, [session, isPending, router]);
@@ -53,7 +54,7 @@ export default function AdminLayout({
     );
   }
 
-  if (!session?.user || session.user.role !== "admin") {
+  if (!session?.user || (session.user as { role?: string }).role !== "admin") {
     return null;
   }
 

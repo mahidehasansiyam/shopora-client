@@ -82,7 +82,7 @@ export default function Navbar() {
                   {session.user.name}
                 </span>
               </div>
-              {session.user.role === "admin" && (
+              {(session.user as { role?: string }).role === "admin" && (
                 <Link
                   href="/admin/dashboard"
                   className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -166,7 +166,7 @@ export default function Navbar() {
                     <LogOut size={18} />
                   </button>
                 </div>
-                {session.user.role === "admin" && (
+                {(session.user as { role?: string }).role === "admin" && (
                   <Link
                     href="/admin/dashboard"
                     onClick={() => setIsMobileOpen(false)}
