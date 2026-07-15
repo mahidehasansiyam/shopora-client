@@ -2,38 +2,51 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
-
-async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
-  e.preventDefault();
-  try {
-    const formData = new FormData(e.currentTarget);
-    const data = {
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
-      rememberMe: formData.get("remember") === "on",
-    };
-    const { data: result, error } = await authClient.signIn.email({
-      email: data.email,
-      password: data.password,
-      callbackURL: "/",
-    });
-    if (result) console.log("login success", result);
-    if (error) console.log("login error", error);
-  } catch (err) {
-    console.error("Login failed", err);
-  }
-}
-
-async function handleGoogleLogin() {
-  await authClient.signIn.social({
-    provider: 'google',
-  });
-}
+import { toast } from "react-toastify";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const data = {
+        email: formData.get("email") as string,
+        password: formData.get("password") as string,
+        rememberMe: formData.get("remember") === "on",
+      };
+      const { data: result, error } = await authClient.signIn.email({
+        email: data.email,
+        password: data.password,
+        callbackURL: "/",
+      });
+      if (result) {
+        toast.success("Welcome back!");
+      }
+      if (error) {
+        toast.error(error.message || "Invalid email or password.");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Login failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleLogin() {
+    try {
+      await authClient.signIn.social({
+        provider: 'google',
+      });
+    } catch {
+      toast.error("Google sign-in failed.");
+    }
+  }
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
@@ -46,10 +59,7 @@ export default function LoginPage() {
         </div>
 
         <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-          <form
-            onSubmit={(e) => handleLogin(e)}
-            className="space-y-4"
-          >
+          <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label
                 htmlFor="email"
@@ -67,6 +77,7 @@ export default function LoginPage() {
                   name="email"
                   type="email"
                   placeholder="you@example.com"
+                  required
                   className="w-full rounded-md border border-input bg-background py-2 pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-ring focus:ring-1 focus:ring-ring"
                 />
               </div>
@@ -89,6 +100,7 @@ export default function LoginPage() {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
+                  required
                   className="w-full rounded-md border border-input bg-background py-2 pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-ring focus:ring-1 focus:ring-ring"
                 />
                 <button
@@ -119,9 +131,11 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full rounded-md bg-primary py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+              disabled={loading}
+              className="flex w-full items-center justify-center gap-2 rounded-md bg-primary py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Sign In
+              {loading && <Loader2 size={16} className="animate-spin" />}
+              {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 

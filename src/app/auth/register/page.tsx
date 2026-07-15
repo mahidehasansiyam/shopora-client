@@ -2,39 +2,53 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
-
-async function handleRegister(e: React.FormEvent<HTMLFormElement>) {
-  e.preventDefault();
-  try {
-    const formData = new FormData(e.currentTarget);
-    const datas = {
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
-      agreedToTerms: formData.get("terms") === "on",
-    };
-    const { data, error } = await authClient.signUp.email({
-      name: datas.name,
-      email: datas.email,
-      password: datas.password,
-      callbackURL: "/",
-    });
-    if (data) console.log("data", data);
-    if (error) console.log("error :", error);
-  } catch (error) {
-    console.error("Registration failed", error);
-  }
-}
-const handleGoogleLogin = async () => {
-  const data = await authClient.signIn.social({
-    provider: 'google',
-  });
-};
+import { toast } from "react-toastify";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  async function handleRegister(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const datas = {
+        name: formData.get("name") as string,
+        email: formData.get("email") as string,
+        password: formData.get("password") as string,
+        agreedToTerms: formData.get("terms") === "on",
+      };
+      const { data, error } = await authClient.signUp.email({
+        name: datas.name,
+        email: datas.email,
+        password: datas.password,
+        callbackURL: "/",
+      });
+      if (data) {
+        toast.success("Account created!");
+      }
+      if (error) {
+        toast.error(error.message || "Registration failed.");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Registration failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleLogin() {
+    try {
+      await authClient.signIn.social({
+        provider: 'google',
+      });
+    } catch {
+      toast.error("Google sign-up failed.");
+    }
+  }
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
@@ -49,10 +63,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-          <form
-            onSubmit={(e) => handleRegister(e)}
-            className="space-y-4"
-          >
+          <form onSubmit={handleRegister} className="space-y-4">
             <div>
               <label
                 htmlFor="name"
@@ -70,6 +81,7 @@ export default function RegisterPage() {
                   name="name"
                   type="text"
                   placeholder="John Doe"
+                  required
                   className="w-full rounded-md border border-input bg-background py-2 pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-ring focus:ring-1 focus:ring-ring"
                 />
               </div>
@@ -92,6 +104,7 @@ export default function RegisterPage() {
                   name="email"
                   type="email"
                   placeholder="you@example.com"
+                  required
                   className="w-full rounded-md border border-input bg-background py-2 pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-ring focus:ring-1 focus:ring-ring"
                 />
               </div>
@@ -114,6 +127,7 @@ export default function RegisterPage() {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
+                  required
                   className="w-full rounded-md border border-input bg-background py-2 pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-ring focus:ring-1 focus:ring-ring"
                 />
                 <button
@@ -157,9 +171,11 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              className="w-full rounded-md bg-primary py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+              disabled={loading}
+              className="flex w-full items-center justify-center gap-2 rounded-md bg-primary py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Create Account
+              {loading && <Loader2 size={16} className="animate-spin" />}
+              {loading ? "Creating account..." : "Create Account"}
             </button>
           </form>
 

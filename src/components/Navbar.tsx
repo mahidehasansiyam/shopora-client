@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSession, signOut } from "@/lib/auth-client";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -15,6 +16,7 @@ const navLinks = [
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { data: session, isPending } = useSession();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 0);
@@ -53,13 +55,45 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* Desktop Login */}
-        <Link
-          href="/auth/login"
-          className="hidden md:inline-flex items-center justify-center rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-        >
-          Login
-        </Link>
+        {/* Desktop Auth */}
+        <div className="hidden md:flex items-center gap-3">
+          {isPending ? (
+            <div className="h-9 w-20 animate-pulse rounded-md bg-muted" />
+          ) : session?.user ? (
+            <>
+              <div className="flex items-center gap-2">
+                {session.user.image ? (
+                  <img
+                    src={session.user.image}
+                    alt={session.user.name || "Avatar"}
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
+                    {session.user.name?.charAt(0)?.toUpperCase() || "U"}
+                  </div>
+                )}
+                <span className="text-sm font-medium text-foreground">
+                  {session.user.name}
+                </span>
+              </div>
+              <button
+                onClick={() => signOut()}
+                className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                aria-label="Logout"
+              >
+                <LogOut size={18} />
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/auth/login"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Login
+            </Link>
+          )}
+        </div>
 
         {/* Mobile Menu Toggle */}
         <button
@@ -86,13 +120,46 @@ export default function Navbar() {
               </Link>
             ))}
             <hr className="my-2 border-border" />
-            <Link
-              href="/auth/login"
-              onClick={() => setIsMobileOpen(false)}
-              className="rounded-md bg-primary px-3 py-2 text-center text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-            >
-              Login
-            </Link>
+            {isPending ? (
+              <div className="h-10 animate-pulse rounded-md bg-muted" />
+            ) : session?.user ? (
+              <div className="flex items-center justify-between rounded-md bg-accent px-3 py-2">
+                <div className="flex items-center gap-2">
+                  {session.user.image ? (
+                    <img
+                      src={session.user.image}
+                      alt={session.user.name || "Avatar"}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
+                      {session.user.name?.charAt(0)?.toUpperCase() || "U"}
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-foreground">
+                    {session.user.name}
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    signOut();
+                    setIsMobileOpen(false);
+                  }}
+                  className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+                  aria-label="Logout"
+                >
+                  <LogOut size={18} />
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/auth/login"
+                onClick={() => setIsMobileOpen(false)}
+                className="block rounded-md bg-primary px-3 py-2 text-center text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                Login
+              </Link>
+            )}
           </nav>
         </div>
       )}

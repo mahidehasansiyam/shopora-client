@@ -2,6 +2,7 @@
 @import "@heroui/styles";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "react-toastify/dist/ReactToastify.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -127,4 +128,21 @@
   html {
     @apply font-sans;
     }
+}
+
+.Toastify__toast--success {
+  --toastify-color-success: var(--primary);
+}
+
+.Toastify__toast--error {
+  --toastify-color-error: var(--destructive);
+}
+
+.Toastify__toast {
+  font-family: var(--font-sans);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.Toastify__progress-bar {
+  border-radius: 0 0 12px 12px;
 }
