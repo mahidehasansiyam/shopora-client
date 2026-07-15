@@ -1,9 +1,19 @@
+import HeroBanner from "@/components/HeroBanner";
+import FeaturedCategories from "@/components/FeaturedCategories";
+import TrendingProducts from "@/components/TrendingProducts";
+import FlashSaleBanner from "@/components/FlashSaleBanner";
+import WhyShopWithUs from "@/components/WhyShopWithUs";
+import NewsletterSection from "@/components/NewsletterSection";
 
 export default function Home() {
   return (
-    <div className="">
-      <h2>This is home page of shopor</h2>
-      
-    </div>
+    <>
+      <HeroBanner />
+      <FeaturedCategories />
+      <TrendingProducts />
+      <FlashSaleBanner />
+      <WhyShopWithUs />
+      <NewsletterSection />
+    </>
   );
 }
