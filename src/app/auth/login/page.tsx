@@ -31,12 +31,6 @@ async function handleGoogleLogin() {
     provider: 'google',
   });
 }
-}
-const handleGoogleLogin = async () => {
-  const data = await authClient.signIn.social({
-    provider: 'google',
-  });
-};
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
