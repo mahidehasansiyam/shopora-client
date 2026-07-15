@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, LogOut } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Menu, X, LogOut, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession, signOut } from "@/lib/auth-client";
 
@@ -18,11 +19,15 @@ export default function Navbar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { data: session, isPending } = useSession();
 
+  const pathname = usePathname();
+
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 0);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  if (pathname.startsWith("/admin")) return null;
 
   return (
     <header
@@ -77,6 +82,15 @@ export default function Navbar() {
                   {session.user.name}
                 </span>
               </div>
+              {session.user.role === "admin" && (
+                <Link
+                  href="/admin/dashboard"
+                  className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  aria-label="Dashboard"
+                >
+                  <LayoutDashboard size={18} />
+                </Link>
+              )}
               <button
                 onClick={() => signOut()}
                 className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -123,33 +137,45 @@ export default function Navbar() {
             {isPending ? (
               <div className="h-10 animate-pulse rounded-md bg-muted" />
             ) : session?.user ? (
-              <div className="flex items-center justify-between rounded-md bg-accent px-3 py-2">
-                <div className="flex items-center gap-2">
-                  {session.user.image ? (
-                    <img
-                      src={session.user.image}
-                      alt={session.user.name || "Avatar"}
-                      className="h-8 w-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
-                      {session.user.name?.charAt(0)?.toUpperCase() || "U"}
-                    </div>
-                  )}
-                  <span className="text-sm font-medium text-foreground">
-                    {session.user.name}
-                  </span>
+              <div className="rounded-md bg-accent px-3 py-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {session.user.image ? (
+                      <img
+                        src={session.user.image}
+                        alt={session.user.name || "Avatar"}
+                        className="h-8 w-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
+                        {session.user.name?.charAt(0)?.toUpperCase() || "U"}
+                      </div>
+                    )}
+                    <span className="text-sm font-medium text-foreground">
+                      {session.user.name}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      signOut();
+                      setIsMobileOpen(false);
+                    }}
+                    className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+                    aria-label="Logout"
+                  >
+                    <LogOut size={18} />
+                  </button>
                 </div>
-                <button
-                  onClick={() => {
-                    signOut();
-                    setIsMobileOpen(false);
-                  }}
-                  className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-                  aria-label="Logout"
-                >
-                  <LogOut size={18} />
-                </button>
+                {session.user.role === "admin" && (
+                  <Link
+                    href="/admin/dashboard"
+                    onClick={() => setIsMobileOpen(false)}
+                    className="mt-2 flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+                  >
+                    <LayoutDashboard size={16} />
+                    Dashboard
+                  </Link>
+                )}
               </div>
             ) : (
               <Link
