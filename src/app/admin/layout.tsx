@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Package,
   ClipboardList,
+  FilePlus,
   Tags,
   Users,
   LogOut,
@@ -16,10 +17,11 @@ import {
   Menu,
   X,
 } from "lucide-react";
-
+   
 const sidebarLinks = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Products", href: "/admin/products", icon: Package },
+  { label: "Post Product", href: "/admin/post-product", icon: FilePlus },
   { label: "Orders", href: "/admin/orders", icon: ClipboardList },
   { label: "Categories", href: "/admin/categories", icon: Tags },
   { label: "Users", href: "/admin/users", icon: Users },
@@ -34,7 +36,7 @@ export default function AdminLayout({
   const { data: session, isPending } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  console.log(session);
+ 
 
   useEffect(() => {
     if (!isPending && (!session?.user || (session.user as { role?: string }).role !== "admin")) {
