@@ -41,7 +41,7 @@ export default function AdminLayout({
       router.replace("/");
     }
   }, [session, isPending, router]);
-
+   
   function closeSidebar() {
     setSidebarOpen(false);
   }
