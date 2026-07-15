@@ -26,6 +26,18 @@ async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
   }
 }
 
+async function handleGoogleLogin() {
+  await authClient.signIn.social({
+    provider: 'google',
+  });
+}
+}
+const handleGoogleLogin = async () => {
+  const data = await authClient.signIn.social({
+    provider: 'google',
+  });
+};
+
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -129,6 +141,7 @@ export default function LoginPage() {
           </div>
 
           <button
+            onClick={handleGoogleLogin}
             type="button"
             className="flex w-full items-center justify-center gap-3 rounded-md border border-input bg-background py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
