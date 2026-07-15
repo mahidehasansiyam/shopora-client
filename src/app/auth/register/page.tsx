@@ -27,6 +27,11 @@ async function handleRegister(e: React.FormEvent<HTMLFormElement>) {
     console.error("Registration failed", error);
   }
 }
+const handleGoogleLogin = async () => {
+  const data = await authClient.signIn.social({
+    provider: 'google',
+  });
+};
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -168,6 +173,7 @@ export default function RegisterPage() {
           </div>
 
           <button
+            onClick={handleGoogleLogin}
             type="button"
             className="flex w-full items-center justify-center gap-3 rounded-md border border-input bg-background py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
