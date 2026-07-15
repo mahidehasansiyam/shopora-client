@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, LogOut, LayoutDashboard, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession, signOut } from "@/lib/auth-client";
+import { useCart } from "@/contexts/CartContext";
+import CartDrawer from "@/components/CartDrawer";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -17,7 +19,9 @@ const navLinks = [
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const { data: session, isPending } = useSession();
+  const { totalItems } = useCart();
 
   const pathname = usePathname();
 
@@ -82,6 +86,18 @@ export default function Navbar() {
                   {session.user.name}
                 </span>
               </div>
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className="relative inline-flex items-center justify-center rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                aria-label="Shopping cart"
+              >
+                <ShoppingCart size={18} />
+                {totalItems > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+                    {totalItems > 9 ? "9+" : totalItems}
+                  </span>
+                )}
+              </button>
               {(session.user as { role?: string }).role === "admin" && (
                 <Link
                   href="/admin/dashboard"
@@ -100,12 +116,26 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <Link
-              href="/auth/login"
-              className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-            >
-              Login
-            </Link>
+            <>
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className="relative inline-flex items-center justify-center rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                aria-label="Shopping cart"
+              >
+                <ShoppingCart size={18} />
+                {totalItems > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+                    {totalItems > 9 ? "9+" : totalItems}
+                  </span>
+                )}
+              </button>
+              <Link
+                href="/auth/login"
+                className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                Login
+              </Link>
+            </>
           )}
         </div>
 
@@ -189,6 +219,7 @@ export default function Navbar() {
           </nav>
         </div>
       )}
+      <CartDrawer open={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </header>
   );
 }

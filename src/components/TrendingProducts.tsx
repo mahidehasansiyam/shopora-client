@@ -1,48 +1,14 @@
-import Link from "next/link";
-import { Star, ShoppingCart } from "lucide-react";
+"use client";
 
-const products = [
-  {
-    id: 1,
-    name: "Wireless Headphones",
-    price: 79.99,
-    originalPrice: 129.99,
-    rating: 4.5,
-    reviews: 234,
-    badge: "Sale",
-    image: null,
-  },
-  {
-    id: 2,
-    name: "Minimalist Watch",
-    price: 149.99,
-    originalPrice: null,
-    rating: 4.8,
-    reviews: 189,
-    badge: "Best Seller",
-    image: null,
-  },
-  {
-    id: 3,
-    name: "Leather Backpack",
-    price: 89.99,
-    originalPrice: 119.99,
-    rating: 4.3,
-    reviews: 312,
-    badge: "Sale",
-    image: null,
-  },
-  {
-    id: 4,
-    name: "Smart Speaker",
-    price: 199.99,
-    originalPrice: null,
-    rating: 4.6,
-    reviews: 456,
-    badge: "New",
-    image: null,
-  },
-];
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Star, ShoppingCart, Check } from "lucide-react";
+import { useSession } from "@/lib/auth-client";
+import { useCart } from "@/contexts/CartContext";
+import type { Product } from "@/types/product";
+
+const API_BASE = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000"}/api`;
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -59,6 +25,44 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export default function TrendingProducts() {
+  const router = useRouter();
+  const { data: session } = useSession();
+  const { addItem, items: cartItems } = useCart();
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    async function fetchTrending() {
+      try {
+        const params = new URLSearchParams({ sort: "newest", limit: "4", page: "1" });
+        const res = await fetch(`${API_BASE}/products?${params}`);
+        if (res.ok) {
+          const json = await res.json();
+          setProducts(json.data || []);
+        }
+      } catch {
+        // silently fail
+      }
+    }
+    fetchTrending();
+  }, []);
+
+  function handleAddToCart(product: Product) {
+    if (!session?.session?.token) {
+      sessionStorage.setItem("pendingCart", JSON.stringify({ productId: product._id, quantity: 1 }));
+      router.push("/auth/login");
+      return;
+    }
+    const image = product.images?.[0] || "";
+    const price = product.discountPrice ?? product.price;
+    addItem(product._id, product.name, price, image, 1);
+  }
+
+  function isInCart(productId: string) {
+    return cartItems.some((item) => item.productId === productId);
+  }
+
+  if (products.length === 0) return null;
+
   return (
     <section className="bg-muted/30 py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -71,48 +75,68 @@ export default function TrendingProducts() {
           </p>
         </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="group relative overflow-hidden rounded-xl border border-border bg-card transition-all hover:shadow-lg"
-            >
-              {product.badge && (
-                <span className="absolute left-3 top-3 z-10 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                  {product.badge}
-                </span>
-              )}
-              <div className="flex aspect-square items-center justify-center bg-muted">
-                <span className="text-4xl text-muted-foreground/30">
-                  🛍️
-                </span>
-              </div>
-              <div className="space-y-2 p-4">
-                <h3 className="text-sm font-semibold text-foreground">
-                  {product.name}
-                </h3>
-                <div className="flex items-center gap-2">
-                  <StarRating rating={product.rating} />
-                  <span className="text-xs text-muted-foreground">
-                    ({product.reviews})
+          {products.map((product) => {
+            const currentPrice = product.discountPrice ?? product.price;
+            const hasDiscount = !!product.discountPrice && product.discountPrice < product.price;
+
+            return (
+              <div
+                key={product._id}
+                className="group relative overflow-hidden rounded-xl border border-border bg-card transition-all hover:shadow-lg"
+              >
+                {hasDiscount && (
+                  <span className="absolute left-3 top-3 z-10 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
+                    Sale
                   </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-foreground">
-                    ${product.price}
-                  </span>
-                  {product.originalPrice && (
-                    <span className="text-sm text-muted-foreground line-through">
-                      ${product.originalPrice}
-                    </span>
+                )}
+                <div className="flex aspect-square items-center justify-center bg-muted overflow-hidden">
+                  {product.images && product.images.length > 0 ? (
+                    <img
+                      src={product.images[0]}
+                      alt={product.name}
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    />
+                  ) : (
+                    <span className="text-4xl text-muted-foreground/30">🛍️</span>
                   )}
                 </div>
-                <button className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90">
-                  <ShoppingCart size={16} />
-                  Add to Cart
-                </button>
+                <div className="space-y-2 p-4">
+                  <p className="text-xs text-muted-foreground">{product.category}</p>
+                  <h3 className="text-sm font-semibold text-foreground">
+                    {product.name}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <StarRating rating={product.rating} />
+                    <span className="text-xs text-muted-foreground">({product.reviewCount})</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-bold text-foreground">
+                      ${currentPrice.toFixed(2)}
+                    </span>
+                    {hasDiscount && (
+                      <span className="text-sm text-muted-foreground line-through">
+                        ${product.price.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                  {isInCart(product._id) ? (
+                    <button className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-primary/10 px-4 py-2 text-sm font-semibold text-primary transition-opacity hover:opacity-90">
+                      <Check size={16} />
+                      In Cart
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleAddToCart(product)}
+                      className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                    >
+                      <ShoppingCart size={16} />
+                      Add to Cart
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <div className="mt-10 text-center">
           <Link

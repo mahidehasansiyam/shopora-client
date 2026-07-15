@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "react-toastify";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -27,6 +29,11 @@ export default function LoginPage() {
       });
       if (result) {
         toast.success("Welcome back!");
+        const pending = sessionStorage.getItem("pendingCart");
+        if (pending) {
+          sessionStorage.removeItem("pendingCart");
+          router.push("/explore");
+        }
       }
       if (error) {
         toast.error(error.message || "Invalid email or password.");

@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, SlidersHorizontal, Star, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Search, SlidersHorizontal, Star, ShoppingCart, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import type { Product, ProductsResponse } from "@/types/product";
+import { useSession } from "@/lib/auth-client";
+import { useCart } from "@/contexts/CartContext";
 
 const categories = ["All", "Electronics", "Fashion", "Home & Living", "Sports"];
 const sortOptions = [
@@ -49,6 +52,10 @@ function ProductSkeleton() {
 }
 
 export default function ExplorePage() {
+  const router = useRouter();
+  const { data: session } = useSession();
+  const { addItem, items: cartItems } = useCart();
+
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
@@ -114,6 +121,21 @@ export default function ExplorePage() {
   function handlePageChange(p: number) {
     setPage(p);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleAddToCart(product: Product) {
+    if (!session?.session?.token) {
+      sessionStorage.setItem("pendingCart", JSON.stringify({ productId: product._id, quantity: 1 }));
+      router.push("/auth/login");
+      return;
+    }
+    const image = product.images?.[0] || "";
+    const price = product.discountPrice ?? product.price;
+    addItem(product._id, product.name, price, image, 1);
+  }
+
+  function isInCart(productId: string) {
+    return cartItems.some((item) => item.productId === productId);
   }
 
   return (
@@ -247,10 +269,23 @@ export default function ExplorePage() {
                           </span>
                         )}
                       </div>
-                      <button className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90">
-                        <ShoppingCart size={16} />
-                        Add to Cart
-                      </button>
+                      {isInCart(product._id) ? (
+                        <button
+                          onClick={() => router.push("/explore")}
+                          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-primary/10 px-4 py-2 text-sm font-semibold text-primary transition-opacity hover:opacity-90"
+                        >
+                          <Check size={16} />
+                          In Cart
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                        >
+                          <ShoppingCart size={16} />
+                          Add to Cart
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
