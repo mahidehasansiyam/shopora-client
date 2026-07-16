@@ -9,11 +9,21 @@ import { useSession } from "@/lib/auth-client";
 import { createOrder } from "@/lib/order-api";
 import { toast } from "react-toastify";
 
+const API_BASE = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000"}/api`;
+
 export default function CheckoutPage() {
   const router = useRouter();
-  const { data: session } = useSession();
-  const { items, totalItems, totalPrice, isLoading, clearCart } = useCart();
+  const { data: session, isPending } = useSession();
+  const { items, totalItems, totalPrice, isLoading } = useCart();
   const [submitting, setSubmitting] = useState(false);
+
+  if (isPending) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   if (!session?.session?.token) {
     router.push("/auth/login");
@@ -61,9 +71,17 @@ export default function CheckoutPage() {
       };
 
       const res = await createOrder(tkn, shippingAddress);
-      await clearCart();
-      toast.success("Order placed successfully!");
-      router.push(`/orders/${res.data._id}`);
+      const orderId = res.data._id;
+
+      const payRes = await fetch(`${API_BASE}/payments/create-checkout-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tkn}` },
+        body: JSON.stringify({ orderId }),
+      });
+      const payData = await payRes.json();
+      if (!payRes.ok) throw new Error(payData.message || "Failed to initiate payment");
+
+      window.location.href = payData.data.url;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to place order");
     } finally {
