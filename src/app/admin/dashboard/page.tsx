@@ -102,6 +102,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!token) return;
+    const t = token;
 
     let cancelled = false;
 
@@ -109,7 +110,7 @@ export default function AdminDashboard() {
       setLoading(true);
       setError("");
       try {
-        const d = await fetchDashboard(token);
+        const d = await fetchDashboard(t);
         if (!cancelled) setData(d);
       } catch {
         if (!cancelled) setError("Failed to load dashboard data");
@@ -171,7 +172,7 @@ export default function AdminDashboard() {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
               <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => `$${v}`} />
-              <Tooltip formatter={(v: number) => formatCurrency(v)} />
+              <Tooltip formatter={(v) => formatCurrency(Number(v) || 0)} />
               <Area type="monotone" dataKey="revenue" stroke="#3b82f6" fill="url(#revGrad)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
@@ -199,7 +200,7 @@ export default function AdminDashboard() {
           ) : (
             <ResponsiveContainer width="100%" height={260}>
               <PieChart>
-                <Pie data={ordersByStatus} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={90} label={({ status, percent }) => `${status} ${(percent * 100).toFixed(0)}%`}>
+                <Pie data={ordersByStatus} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={90} label={({ payload, percent }: any) => `${payload.status} ${(percent * 100).toFixed(0)}%`}>
                   {ordersByStatus.map((_, i) => (
                     <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                   ))}
