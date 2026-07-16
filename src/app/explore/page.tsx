@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Search, SlidersHorizontal, Star, ShoppingCart, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import type { Product, ProductsResponse } from "@/types/product";
 import { useSession } from "@/lib/auth-client";
@@ -239,22 +240,26 @@ export default function ExplorePage() {
                         Sale
                       </span>
                     )}
-                    <div className="flex aspect-square items-center justify-center bg-muted overflow-hidden">
-                      {product.images && product.images.length > 0 ? (
-                        <img
-                          src={product.images[0]}
-                          alt={product.name}
-                          className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                        />
-                      ) : (
-                        <span className="text-4xl text-muted-foreground/30">🛍️</span>
-                      )}
-                    </div>
+                    <Link href={`/products/${product._id}`}>
+                      <div className="flex aspect-square items-center justify-center bg-muted overflow-hidden">
+                        {product.images && product.images.length > 0 ? (
+                          <img
+                            src={product.images[0]}
+                            alt={product.name}
+                            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                          />
+                        ) : (
+                          <span className="text-4xl text-muted-foreground/30">🛍️</span>
+                        )}
+                      </div>
+                    </Link>
                     <div className="space-y-2 p-4">
                       <p className="text-xs text-muted-foreground">{product.category}</p>
-                      <h3 className="text-sm font-semibold text-foreground">
-                        {product.name}
-                      </h3>
+                      <Link href={`/products/${product._id}`}>
+                        <h3 className="text-sm font-semibold text-foreground hover:text-primary transition-colors">
+                          {product.name}
+                        </h3>
+                      </Link>
                       <div className="flex items-center gap-2">
                         <StarRating rating={product.rating} />
                         <span className="text-xs text-muted-foreground">({product.reviewCount})</span>
