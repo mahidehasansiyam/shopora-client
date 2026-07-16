@@ -10,7 +10,6 @@ import {
   Package,
   ClipboardList,
   FilePlus,
-  Tags,
   Users,
   LogOut,
   ChevronLeft,
@@ -23,7 +22,6 @@ const sidebarLinks = [
   { label: "Products", href: "/admin/products", icon: Package },
   { label: "Post Product", href: "/admin/post-product", icon: FilePlus },
   { label: "Orders", href: "/admin/orders", icon: ClipboardList },
-  { label: "Categories", href: "/admin/categories", icon: Tags },
   { label: "Users", href: "/admin/users", icon: Users },
 ];
 
