@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle, ArrowLeft } from "lucide-react";
+import { CheckCircle, ArrowLeft, CreditCard } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
 import { fetchOrder } from "@/lib/order-api";
+import { toast } from "react-toastify";
+
+const API_BASE = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000"}/api`;
 
 interface OrderItem {
   productId: string;
@@ -28,18 +31,29 @@ interface Order {
   };
   totalAmount: number;
   status: string;
+  paymentStatus?: string;
   createdAt: string;
 }
+
+const paymentLabels: Record<string, { label: string; color: string }> = {
+  unpaid: { label: "Pending Payment", color: "text-amber-600 bg-amber-50" },
+  paid: { label: "Paid", color: "text-green-600 bg-green-50" },
+  failed: { label: "Payment Failed", color: "text-red-600 bg-red-50" },
+};
 
 export default function OrderPage() {
   const params = useParams();
   const router = useRouter();
-  const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const { data: session, isPending } = useSession();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const justPaid = searchParams.has("session_id");
+
   useEffect(() => {
+    if (isPending) return;
     if (!session?.session?.token) {
       router.push("/auth/login");
       return;
@@ -56,7 +70,28 @@ export default function OrderPage() {
       }
     }
     load();
-  }, [session, params.id, router]);
+  }, [session, params.id, router, isPending]);
+
+  useEffect(() => {
+    if (!justPaid || !order || order.paymentStatus !== "unpaid" || !session?.session?.token) return;
+    const tkn = session.session.token;
+    const sessionId = searchParams.get("session_id");
+    async function verify() {
+      try {
+        const res = await fetch(`${API_BASE}/payments/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${tkn}` },
+          body: JSON.stringify({ sessionId }),
+        });
+        if (!res.ok) return;
+        const orderRes = await fetchOrder(tkn, params.id as string);
+        setOrder(orderRes.data);
+      } catch {
+        toast.error("Failed to verify payment");
+      }
+    }
+    verify();
+  }, [justPaid, order, session, searchParams, params.id]);
 
   if (loading) {
     return (
@@ -92,6 +127,13 @@ export default function OrderPage() {
         <ArrowLeft size={16} />
         Continue Shopping
       </Link>
+
+      {justPaid && (
+        <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4 text-center">
+          <CreditCard size={24} className="mx-auto text-green-600" />
+          <p className="mt-1 text-sm font-semibold text-green-700">Payment successful!</p>
+        </div>
+      )}
 
       <div className="mt-6 rounded-xl border border-border bg-card p-8 text-center">
         <CheckCircle size={48} className="mx-auto text-green-500" />
@@ -147,6 +189,14 @@ export default function OrderPage() {
               <span className="text-muted-foreground">Status</span>
               <span className="font-medium capitalize text-foreground">{order.status}</span>
             </div>
+            {order.paymentStatus && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Payment</span>
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${paymentLabels[order.paymentStatus]?.color || "bg-muted text-muted-foreground"}`}>
+                  {paymentLabels[order.paymentStatus]?.label || order.paymentStatus}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-muted-foreground">Subtotal</span>
               <span className="font-medium text-foreground">${order.totalAmount.toFixed(2)}</span>
