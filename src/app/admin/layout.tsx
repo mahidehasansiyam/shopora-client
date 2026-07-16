@@ -121,7 +121,7 @@ export default function AdminLayout({
         </div>
       </aside>
 
-      <main className="flex flex-1 flex-col lg:ml-64">
+      <main className="flex flex-1 flex-col lg:ml-0">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur lg:justify-end lg:px-8">
           <button
             onClick={() => setSidebarOpen(true)}
